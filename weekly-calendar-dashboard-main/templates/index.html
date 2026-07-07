@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>플래너</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --ink-900:#1b2333;
+    --ink-700:#3d4657;
+    --ink-400:#8892a3;
+    --paper:#f2f0e8;
+    --paper-card:#fffdf8;
+    --line:#e3ddcd;
+    --accent:#0e7c86;
+    --accent-soft:#d7ece9;
+    --study:#d6524a;
+    --study-soft:#f8e0dd;
+    --club:#3667c2;
+    --club-soft:#dde6f8;
+    --personal:#3f9142;
+    --personal-soft:#dcefdc;
+    --other:#8451c9;
+    --other-soft:#e7ddf6;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Pretendard',sans-serif;
+    background:var(--paper);
+    color:var(--ink-900);
+    display:flex;
+    min-height:100vh;
+  }
+  .num{font-family:'Space Grotesk',sans-serif;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:300px;
+    flex-shrink:0;
+    background:var(--ink-900);
+    color:#f2f0e8;
+    padding:32px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  .brand{
+    font-size:13px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#8892a3;
+    border-bottom:1px solid #333d52;
+    padding-bottom:18px;
+  }
+  .brand b{display:block;font-size:20px;letter-spacing:0;color:#fff;margin-top:6px;}
+  .tabs{display:flex;flex-direction:column;gap:4px;}
+  .tab-btn{
+    display:flex;align-items:center;gap:10px;
+    background:none;border:none;color:#aab2c0;
+    text-align:left;padding:11px 12px;border-radius:8px;
+    font-size:14.5px;font-weight:600;cursor:pointer;
+    font-family:inherit;
+  }
+  .tab-btn .dot{width:6px;height:6px;border-radius:50%;background:#4b5468;flex-shrink:0;}
+  .tab-btn:hover{background:#232c3e;color:#fff;}
+  .tab-btn.active{background:var(--accent);color:#fff;}
+  .tab-btn.active .dot{background:#fff;}
+
+  .panel{border-top:1px solid #333d52;padding-top:22px;}
+  .panel h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#8892a3;margin:0 0 16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:#8892a3;margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:10px 11px;border:1px solid #333d52;background:#232c3e;
+    color:#f2f0e8;border-radius:7px;font-family:inherit;font-size:14px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:1px solid var(--accent);}
+  .row2{display:flex;gap:10px;}
+  .row2 .field{flex:1;}
+  .btn{
+    width:100%;padding:12px;border:none;border-radius:7px;font-weight:700;
+    font-size:14.5px;cursor:pointer;font-family:inherit;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{opacity:.9;}
+  .btn-ghost{background:transparent;color:#aab2c0;border:1px solid #333d52;}
+  .btn-ghost:hover{color:#fff;border-color:#4b5468;}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;padding:44px 52px;overflow-y:auto;}
+  .main-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:26px;}
+  .main-head h1{font-size:24px;margin:0;}
+  .main-head span{color:var(--ink-400);font-size:13.5px;}
+
+  .stat-row{display:flex;gap:16px;margin-bottom:30px;}
+  .stat{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 22px;flex:1;
+  }
+  .stat .l{font-size:12.5px;color:var(--ink-400);margin-bottom:6px;}
+  .stat .v{font-size:26px;font-weight:700;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- Calendar ---- */
+  .cal-nav{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .cal-nav button{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:7px;
+    width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--ink-700);
+  }
+  .cal-nav .month-label{font-size:17px;font-weight:700;}
+  .cal-nav .today-btn{margin-left:auto;background:none;border:1px solid var(--line);
+    border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--ink-700);width:auto;}
+
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:26px;}
+  .cal-dow{text-align:center;font-size:12px;color:var(--ink-400);font-weight:700;padding-bottom:4px;}
+  .cal-cell{
+    min-height:88px;background:var(--paper-card);border:1px solid var(--line);
+    border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:5px;
+    cursor:pointer;position:relative;
+  }
+  .cal-cell.other-month{opacity:.35;}
+  .cal-cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+  .cal-cell.selected{background:var(--accent-soft);}
+  .cal-cell .dnum{font-size:13px;font-weight:700;}
+  .cal-cell .bars{display:flex;flex-direction:column;gap:3px;overflow:hidden;}
+  .cal-cell .bar{
+    font-size:10px;padding:2px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;font-weight:600;
+  }
+  .cal-cell .more{font-size:10px;color:var(--ink-400);}
+
+  .bar.study,.badge.study{background:var(--study-soft);color:var(--study);}
+  .bar.club,.badge.club{background:var(--club-soft);color:var(--club);}
+  .bar.personal,.badge.personal{background:var(--personal-soft);color:var(--personal);}
+  .bar.other,.badge.other{background:var(--other-soft);color:var(--other);}
+  .dot.study{background:var(--study);}
+  .dot.club{background:var(--club);}
+  .dot.personal{background:var(--personal);}
+  .dot.other{background:var(--other);}
+
+  .day-detail{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}
+  .day-detail h3{margin:0 0 14px;font-size:15px;}
+  .empty-note{color:var(--ink-400);font-size:13.5px;padding:8px 0;}
+
+  /* ---- schedule item ---- */
+  .sched-item{
+    display:flex;align-items:center;gap:14px;padding:13px 14px;border:1px solid var(--line);
+    border-radius:8px;margin-bottom:10px;background:var(--paper-card);
+  }
+  .sched-item .cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .sched-item .info{flex:1;min-width:0;}
+  .sched-item .info strong{display:block;font-size:14.5px;}
+  .sched-item .info span{font-size:12px;color:var(--ink-400);}
+  .badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;flex-shrink:0;}
+  .icon-btn{
+    background:none;border:1px solid var(--line);border-radius:6px;width:28px;height:28px;
+    cursor:pointer;color:var(--ink-700);font-size:13px;flex-shrink:0;
+  }
+  .icon-btn:hover{background:var(--paper);}
+  .icon-btn.danger:hover{background:var(--study-soft);color:var(--study);border-color:var(--study);}
+
+  .edit-form{display:flex;gap:8px;flex:1;align-items:center;flex-wrap:wrap;}
+  .edit-form input, .edit-form select{
+    padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:13px;
+  }
+
+  /* ---- list view ---- */
+  .list-filter{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+  .list-filter select, .list-filter input{
+    padding:9px 11px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13.5px;
+    background:var(--paper-card);
+  }
+  .list-filter .clear{background:none;border:1px solid var(--line);border-radius:7px;padding:9px 13px;
+    font-size:13px;cursor:pointer;color:var(--ink-700);}
+  .date-group{margin-bottom:22px;}
+  .date-group .dg-label{font-size:13px;font-weight:700;color:var(--ink-400);margin-bottom:10px;letter-spacing:.03em;}
+
+  /* ---- diary ---- */
+  .diary-nav{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .diary-nav button{background:var(--paper-card);border:1px solid var(--line);border-radius:7px;
+    width:32px;height:32px;cursor:pointer;color:var(--ink-700);}
+  .diary-nav .d-label{font-size:17px;font-weight:700;}
+  .diary-box{background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;}
+  .diary-box textarea{
+    width:100%;min-height:280px;border:none;background:transparent;resize:vertical;
+    font-family:'Pretendard',sans-serif;font-size:15px;line-height:1.7;color:var(--ink-900);
+  }
+  .diary-box textarea:focus{outline:none;}
+  .diary-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;
+    border-top:1px solid var(--line);padding-top:12px;}
+  .diary-meta .status{font-size:12px;color:var(--ink-400);}
+  .diary-meta button{background:var(--accent);color:#fff;border:none;border-radius:7px;
+    padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  /* ---- memo ---- */
+  .memo-add{display:flex;gap:10px;margin-bottom:20px;}
+  .memo-add input{flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:14px;background:var(--paper-card);}
+  .memo-add button{background:var(--accent);color:#fff;border:none;border-radius:8px;
+    padding:0 20px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .memo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .memo-card{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:16px;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .memo-card.done{opacity:.5;}
+  .memo-card .m-text{font-size:14px;line-height:1.5;flex:1;word-break:break-word;}
+  .memo-card.done .m-text{text-decoration:line-through;}
+  .memo-card .m-foot{display:flex;justify-content:space-between;align-items:center;}
+  .memo-card .m-date{font-size:11px;color:var(--ink-400);}
+  .memo-card .m-actions{display:flex;gap:6px;}
+  .check-btn{
+    width:22px;height:22px;border-radius:5px;border:1.5px solid var(--line);background:none;cursor:pointer;
+    color:var(--accent);font-size:12px;flex-shrink:0;
+  }
+  .memo-card.done .check-btn{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .loading-msg{color:var(--ink-400);font-size:13.5px;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">Weekly Planner<b id="today-display">-</b></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="calendar"><span class="dot"></span>캘린더</button>
+    <button class="tab-btn" data-tab="list"><span class="dot"></span>스케줄표</button>
+    <button class="tab-btn" data-tab="diary"><span class="dot"></span>일기</button>
+    <button class="tab-btn" data-tab="memo"><span class="dot"></span>메모장</button>
+  </div>
+
+  <!-- add schedule panel (shown on calendar / list tabs) -->
+  <div class="panel" id="schedule-panel">
+    <h3>일정 추가</h3>
+    <div class="field">
+      <label for="in-title">일정 제목</label>
+      <input type="text" id="in-title" placeholder="예: 파이썬 과제 제출">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="in-date">날짜</label>
+        <input type="date" id="in-date">
+      </div>
+      <div class="field">
+        <label for="in-time">시간</label>
+        <input type="time" id="in-time">
+      </div>
+    </div>
+    <div class="field">
+      <label for="in-cat">카테고리</label>
+      <select id="in-cat">
+        <option value="study">학업</option>
+        <option value="club">동아리</option>
+        <option value="personal">개인</option>
+        <option value="other">기타</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="addSchedule()">추가하기</button>
+  </div>
+
+  <!-- diary date panel -->
+  <div class="panel" id="diary-panel" style="display:none;">
+    <h3>일기 날짜</h3>
+    <div class="field">
+      <label for="diary-date-input">날짜 선택</label>
+      <input type="date" id="diary-date-input" onchange="jumpToDiaryDate(this.value)">
+    </div>
+    <button class="btn btn-ghost" onclick="setDiaryDate(todayStr())">오늘로 이동</button>
+  </div>
+
+  <!-- memo panel -->
+  <div class="panel" id="memo-panel" style="display:none;">
+    <h3>메모장 안내</h3>
+    <p style="font-size:13px;color:#aab2c0;line-height:1.6;">해야 할 일이나 떠오른 아이디어를 자유롭게 적어두는 공간이에요. 완료한 항목은 체크 표시로 남길 수 있어요.</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="main-head">
+    <h1 id="view-title">캘린더</h1>
+    <span id="view-sub"></span>
+  </div>
+
+  <div class="stat-row" id="stat-row">
+    <div class="stat"><div class="l">전체 일정</div><div class="v num" id="total-count">0개</div></div>
+    <div class="stat"><div class="l">오늘 일정</div><div class="v num" id="today-count">0개</div></div>
+    <div class="stat"><div class="l">이번 주 일정</div><div class="v num" id="week-count">0개</div></div>
+  </div>
+
+  <!-- CALENDAR VIEW -->
+  <div class="view active" id="view-calendar">
+    <div class="cal-nav">
+      <button onclick="shiftMonth(-1)">‹</button>
+      <div class="month-label" id="month-label">-</div>
+      <button onclick="shiftMonth(1)">›</button>
+      <button class="today-btn" onclick="goToTodayMonth()">오늘</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="day-detail">
+      <h3 id="day-detail-title">날짜를 선택하세요</h3>
+      <div id="day-detail-list"></div>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div class="view" id="view-list">
+    <div class="list-filter">
+      <select id="filter-date"><option value="">전체 날짜</option></select>
+      <select id="filter-cat">
+        <option value="">전체 카테고리</option>
+        <option value="study">학업</option>
+        <option value="club">동아리</option>
+        <option value="personal">개인</option>
+        <option value="other">기타</option>
+      </select>
+      <button class="clear" onclick="clearFilters()">필터 초기화</button>
+    </div>
+    <div id="list-container"></div>
+  </div>
+
+  <!-- DIARY VIEW -->
+  <div class="view" id="view-diary">
+    <div class="diary-nav">
+      <button onclick="shiftDiaryDay(-1)">‹</button>
+      <div class="d-label" id="diary-date-label">-</div>
+      <button onclick="shiftDiaryDay(1)">›</button>
+    </div>
+    <div class="diary-box">
+      <textarea id="diary-text" placeholder="오늘 하루는 어땠나요?"></textarea>
+      <div class="diary-meta">
+        <span class="status" id="diary-status">저장되지 않음</span>
+        <button onclick="saveDiary()">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMO VIEW -->
+  <div class="view" id="view-memo">
+    <div class="memo-add">
+      <input type="text" id="memo-input" placeholder="할 일이나 아이디어를 입력하세요" onkeydown="if(event.key==='Enter')addMemo();">
+      <button onclick="addMemo()">추가</button>
+    </div>
+    <div class="memo-grid" id="memo-grid"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+let schedules = [];
+let memos = [];
+let calYear, calMonth; // 0-indexed month
+let selectedCalDate = null;
+let diaryDate = null;
+let diaryDirty = false;
+let currentTab = 'calendar';
+
+const CAT_LABEL = {study:'학업', club:'동아리', personal:'개인', other:'기타'};
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDateKor(dstr){
+  const [y,m,d] = dstr.split('-').map(Number);
+  const days=['일','월','화','수','목','금','토'];
+  const dt = new Date(y,m-1,d);
+  return `${y}년 ${m}월 ${d}일 (${days[dt.getDay()]})`;
+}
+function uid(){ return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+
+/* ---------------- storage ---------------- */
+async function loadSchedules(){
+  try{
+    const r = await window.storage.get('schedules', false);
+    schedules = r ? JSON.parse(r.value) : [];
+  }catch(e){ schedules = []; }
+}
+async function persistSchedules(){
+  try{ await window.storage.set('schedules', JSON.stringify(schedules), false); }
+  catch(e){ console.error('save failed', e); }
+}
+async function loadMemos(){
+  try{
+    const r = await window.storage.get('memos', false);
+    memos = r ? JSON.parse(r.value) : [];
+  }catch(e){ memos = []; }
+}
+async function persistMemos(){
+  try{ await window.storage.set('memos', JSON.stringify(memos), false); }
+  catch(e){ console.error('save failed', e); }
+}
+async function loadDiary(dateStr){
+  try{
+    const r = await window.storage.get('diary:'+dateStr, false);
+    return r ? r.value : '';
+  }catch(e){ return ''; }
+}
+async function persistDiary(dateStr, text){
+  try{ await window.storage.set('diary:'+dateStr, text, false); }
+  catch(e){ console.error('save failed', e); }
+}
+
+/* ---------------- init ---------------- */
+window.onload = async function(){
+  document.getElementById('today-display').innerText = fmtDateKor(todayStr());
+  document.getElementById('in-date').value = todayStr();
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  selectedCalDate = todayStr();
+  diaryDate = todayStr();
+
+  await loadSchedules();
+  await loadMemos();
+
+  renderStats();
+  renderCalendar();
+  renderList();
+  renderMemos();
+  await loadAndShowDiary();
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>switchTab(btn.dataset.tab));
+  });
+  document.getElementById('filter-date').addEventListener('change', renderList);
+  document.getElementById('filter-cat').addEventListener('change', renderList);
+  document.getElementById('diary-text').addEventListener('input', ()=>{
+    diaryDirty = true;
+    document.getElementById('diary-status').innerText = '저장되지 않은 변경사항';
+  });
+};
+
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+
+  document.getElementById('schedule-panel').style.display = (tab==='calendar'||tab==='list') ? 'block' : 'none';
+  document.getElementById('diary-panel').style.display = (tab==='diary') ? 'block' : 'none';
+  document.getElementById('memo-panel').style.display = (tab==='memo') ? 'block' : 'none';
+  document.getElementById('stat-row').style.display = (tab==='diary'||tab==='memo') ? 'none' : 'flex';
+
+  const titles = {calendar:'캘린더', list:'스케줄표', diary:'일기', memo:'메모장'};
+  const subs = {calendar:'날짜를 눌러 그날의 일정을 확인하세요', list:'전체 일정을 확인하고 수정·삭제하세요',
+    diary:'하루를 기록해보세요', memo:'해야 할 일과 아이디어를 모아두세요'};
+  document.getElementById('view-title').innerText = titles[tab];
+  document.getElementById('view-sub').innerText = subs[tab];
+
+  if(tab==='list') renderList();
+  if(tab==='memo') renderMemos();
+}
+
+/* ---------------- stats ---------------- */
+function renderStats(){
+  document.getElementById('total-count').innerText = schedules.length+'개';
+  const t = todayStr();
+  document.getElementById('today-count').innerText = schedules.filter(s=>s.date===t).length+'개';
+
+  const now = new Date();
+  const sunday = new Date(now); sunday.setDate(now.getDate()-now.getDay());
+  const saturday = new Date(sunday); saturday.setDate(sunday.getDate()+6);
+  const inWeek = schedules.filter(s=>{
+    const d = new Date(s.date+'T00:00:00');
+    return d>=new Date(sunday.toDateString()) && d<=new Date(saturday.toDateString());
+  });
+  document.getElementById('week-count').innerText = inWeek.length+'개';
+}
+
+/* ---------------- add schedule ---------------- */
+async function addSchedule(){
+  const title = document.getElementById('in-title').value.trim();
+  const date = document.getElementById('in-date').value;
+  const time = document.getElementById('in-time').value;
+  const cat = document.getElementById('in-cat').value;
+  if(!title || !date){ alert('제목과 날짜는 필수예요.'); return; }
+
+  schedules.push({id:uid(), title, date, time, category:cat});
+  schedules.sort((a,b)=> (a.date+((a.time)||'99:99')).localeCompare(b.date+((b.time)||'99:99')));
+  await persistSchedules();
+
+  document.getElementById('in-title').value='';
+  document.getElementById('in-time').value='';
+
+  renderStats(); renderCalendar(); renderList();
+}
+
+async function deleteSchedule(id){
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  schedules = schedules.filter(s=>s.id!==id);
+  await persistSchedules();
+  renderStats(); renderCalendar(); renderList();
+}
+
+async function updateSchedule(id, newData){
+  const idx = schedules.findIndex(s=>s.id===id);
+  if(idx===-1) return;
+  schedules[idx] = {...schedules[idx], ...newData};
+  schedules.sort((a,b)=> (a.date+((a.time)||'99:99')).localeCompare(b.date+((b.time)||'99:99')));
+  await persistSchedules();
+  renderStats(); renderCalendar(); renderList();
+}
+
+/* ---------------- render a schedule item (list or day-detail) ---------------- */
+function scheduleItemHtml(item, editable=true){
+  return `
+    <div class="sched-item" data-id="${item.id}">
+      <span class="cat-dot dot ${item.category}"></span>
+      <div class="info">
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${item.date}${item.time ? ' · '+item.time : ''}</span>
+      </div>
+      <span class="badge ${item.category}">${CAT_LABEL[item.category]}</span>
+      ${editable ? `
+      <button class="icon-btn" title="수정" onclick="startEdit('${item.id}', this)">✎</button>
+      <button class="icon-btn danger" title="삭제" onclick="deleteSchedule('${item.id}')">✕</button>` : ''}
+    </div>`;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div'); d.innerText = str; return d.innerHTML;
+}
+
+function startEdit(id, btn){
+  const item = schedules.find(s=>s.id===id);
+  if(!item) return;
+  const container = btn.closest('.sched-item');
+  container.innerHTML = `
+    <div class="edit-form">
+      <input type="text" id="ed-title-${id}" value="${escapeHtml(item.title)}" style="flex:2;min-width:120px;">
+      <input type="date" id="ed-date-${id}" value="${item.date}">
+      <input type="time" id="ed-time-${id}" value="${item.time||''}">
+      <select id="ed-cat-${id}">
+        <option value="study" ${item.category==='study'?'selected':''}>학업</option>
+        <option value="club" ${item.category==='club'?'selected':''}>동아리</option>
+        <option value="personal" ${item.category==='personal'?'selected':''}>개인</option>
+        <option value="other" ${item.category==='other'?'selected':''}>기타</option>
+      </select>
+      <button class="icon-btn" title="저장" onclick="commitEdit('${id}')">✓</button>
+      <button class="icon-btn" title="취소" onclick="renderList();renderDayDetail();">×</button>
+    </div>`;
+}
+
+async function commitEdit(id){
+  const title = document.getElementById('ed-title-'+id).value.trim();
+  const date = document.getElementById('ed-date-'+id).value;
+  const time = document.getElementById('ed-time-'+id).value;
+  const category = document.getElementById('ed-cat-'+id).value;
+  if(!title || !date){ alert('제목과 날짜는 필수예요.'); return; }
+  await updateSchedule(id, {title, date, time, category});
+  renderDayDetail();
+}
+
+/* ---------------- calendar ---------------- */
+function shiftMonth(delta){
+  calMonth += delta;
+  if(calMonth<0){ calMonth=11; calYear--; }
+  if(calMonth>11){ calMonth=0; calYear++; }
+  renderCalendar();
+}
+function goToTodayMonth(){
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  selectedCalDate = todayStr();
+  renderCalendar();
+}
+
+function renderCalendar(){
+  document.getElementById('month-label').innerText = `${calYear}년 ${calMonth+1}월`;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  ['일','월','화','수','목','금','토'].forEach(d=>{
+    const el = document.createElement('div');
+    el.className = 'cal-dow'; el.innerText = d;
+    grid.appendChild(el);
+  });
+
+  const firstOfMonth = new Date(calYear, calMonth, 1);
+  const startOffset = firstOfMonth.getDay();
+  const gridStart = new Date(calYear, calMonth, 1 - startOffset);
+  const t = todayStr();
+
+  for(let i=0;i<42;i++){
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate()+i);
+    const dstr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    if(d.getMonth()!==calMonth) cell.classList.add('other-month');
+    if(dstr===t) cell.classList.add('today');
+    if(dstr===selectedCalDate) cell.classList.add('selected');
+    cell.onclick = ()=>{ selectedCalDate = dstr; renderCalendar(); renderDayDetail(); };
+
+    const dayItems = schedules.filter(s=>s.date===dstr);
+    let barsHtml = '';
+    dayItems.slice(0,3).forEach(it=>{
+      barsHtml += `<div class="bar ${it.category}">${escapeHtml(it.title)}</div>`;
+    });
+    if(dayItems.length>3) barsHtml += `<div class="more">+${dayItems.length-3}개 더</div>`;
+
+    cell.innerHTML = `<div class="dnum num">${d.getDate()}</div><div class="bars">${barsHtml}</div>`;
+    grid.appendChild(cell);
+  }
+  renderDayDetail();
+}
+
+function renderDayDetail(){
+  const items = schedules.filter(s=>s.date===selectedCalDate);
+  document.getElementById('day-detail-title').innerText = selectedCalDate ? fmtDateKor(selectedCalDate) : '날짜를 선택하세요';
+  const list = document.getElementById('day-detail-list');
+  if(items.length===0){
+    list.innerHTML = `<div class="empty-note">이 날짜에는 등록된 일정이 없어요.</div>`;
+  } else {
+    list.innerHTML = items.map(it=>scheduleItemHtml(it)).join('');
+  }
+}
+
+/* ---------------- list view ---------------- */
+function populateDateFilterOptions(){
+  const sel = document.getElementById('filter-date');
+  const current = sel.value;
+  const dates = [...new Set(schedules.map(s=>s.date))].sort();
+  sel.innerHTML = '<option value="">전체 날짜</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.value = dates.includes(current) ? current : '';
+}
+
+function clearFilters(){
+  document.getElementById('filter-date').value='';
+  document.getElementById('filter-cat').value='';
+  renderList();
+}
+
+function renderList(){
+  populateDateFilterOptions();
+  const dateFilter = document.getElementById('filter-date').value;
+  const catFilter = document.getElementById('filter-cat').value;
+
+  let filtered = schedules.filter(s=>
+    (!dateFilter || s.date===dateFilter) && (!catFilter || s.category===catFilter)
+  );
+
+  const container = document.getElementById('list-container');
+  if(filtered.length===0){
+    container.innerHTML = `<div class="empty-note">조건에 맞는 일정이 없어요.</div>`;
+    return;
+  }
+
+  const grouped = {};
+  filtered.forEach(s=>{ (grouped[s.date] = grouped[s.date]||[]).push(s); });
+  const sortedDates = Object.keys(grouped).sort();
+
+  container.innerHTML = sortedDates.map(date=>`
+    <div class="date-group">
+      <div class="dg-label">${fmtDateKor(date)}</div>
+      ${grouped[date].map(it=>scheduleItemHtml(it)).join('')}
+    </div>
+  `).join('');
+}
+
+/* ---------------- diary ---------------- */
+function setDiaryDate(dstr){
+  diaryDate = dstr;
+  document.getElementById('diary-date-input').value = dstr;
+  loadAndShowDiary();
+}
+function jumpToDiaryDate(dstr){ if(dstr) setDiaryDate(dstr); }
+function shiftDiaryDay(delta){
+  const d = new Date(diaryDate+'T00:00:00');
+  d.setDate(d.getDate()+delta);
+  setDiaryDate(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+}
+async function loadAndShowDiary(){
+  document.getElementById('diary-date-label').innerText = fmtDateKor(diaryDate);
+  document.getElementById('diary-date-input').value = diaryDate;
+  document.getElementById('diary-status').innerText = '불러오는 중...';
+  const text = await loadDiary(diaryDate);
+  document.getElementById('diary-text').value = text;
+  diaryDirty = false;
+  document.getElementById('diary-status').innerText = text ? '저장됨' : '작성된 일기가 없어요';
+}
+async function saveDiary(){
+  const text = document.getElementById('diary-text').value;
+  await persistDiary(diaryDate, text);
+  diaryDirty = false;
+  document.getElementById('diary-status').innerText = '저장됨';
+}
+
+/* ---------------- memo ---------------- */
+async function addMemo(){
+  const input = document.getElementById('memo-input');
+  const text = input.value.trim();
+  if(!text) return;
+  memos.unshift({id:uid(), text, done:false, createdAt: todayStr()});
+  await persistMemos();
+  input.value='';
+  renderMemos();
+}
+async function toggleMemo(id){
+  const m = memos.find(m=>m.id===id);
+  if(!m) return;
+  m.done = !m.done;
+  await persistMemos();
+  renderMemos();
+}
+async function deleteMemo(id){
+  memos = memos.filter(m=>m.id!==id);
+  await persistMemos();
+  renderMemos();
+}
+function renderMemos(){
+  const grid = document.getElementById('memo-grid');
+  if(memos.length===0){
+    grid.innerHTML = `<div class="empty-note">아직 메모가 없어요. 위 입력창에 적어보세요.</div>`;
+    return;
+  }
+  grid.innerHTML = memos.map(m=>`
+    <div class="memo-card ${m.done?'done':''}">
+      <div class="m-text">${escapeHtml(m.text)}</div>
+      <div class="m-foot">
+        <span class="m-date">${m.createdAt}</span>
+        <div class="m-actions">
+          <button class="check-btn" title="완료 표시" onclick="toggleMemo('${m.id}')">${m.done?'✓':''}</button>
+          <button class="icon-btn danger" title="삭제" onclick="deleteMemo('${m.id}')">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
